@@ -1,24 +1,13 @@
-// mimic the protocol below (we're not doing this right now but I'm leaving it here for future reference
-    // measuring_pulse_duration(20u) which is actually like 85us
-    // m_number_loops(3)
-    // m_pulse_set(100,125,900)
-    // m_measuring_interval(.4m,.4m,.4m) which is actually 800us
-// using the Cerebot MX3ck board instead of UNO, so output pins will be for that board
 
 ////////////////////////////////// input state machine ////////////////////////////////////////
 // the states of our input state-machine
-typedef enum { NONE, GOT_M, GOT_N, GOT_I, GOT_G, GOT_H, GOT_V, GOT_R, GOT_P} states;
+typedef enum { NONE, GOT_D, GOT_M, GOT_N, GOT_I, GOT_G, GOT_H, GOT_V, GOT_R, GOT_P} states;
 
 // current input state-machine state
 states state = NONE;
 
 // current partial number we add to
 int current_value;
-
-// serial variables
-//String sdata=""; // buffer to hold serial data coming in from user
-//byte ch = ' '; // temporary storage for each bbyte of data
-//int new_value; // buffer to hold user integers
 
 /////////////////////////////////// trace variables /////////////////////////////////////////////
 // trace variables that are modified by experimentControl
@@ -48,6 +37,8 @@ long prev_time = 0;
 int counter = 0; // counter that will be used to count the number of measurement points and trigger the end of measure_state
 
 //////////////////////////////////// board specific pin assignments ////////////////////////////////////////////////////////////
+// using the Cerebot MX3ck board instead of UNO, so output pins will be for that board
+
 // cerebot JA port, used for output to the head
 // upper row, looking at it is 3.3V, GND, 3, 2, 1, 0
 // lower row, looking at it is 3.3V, GND, 7, 6, 5, 4
@@ -193,9 +184,17 @@ void executeTrace(){
   Serial.println("Start measurement");
   }
 
+void sendStatus(){
+  Serial.println("Arduino traceController is listening.");
+}
+
 void handlePreviousState(){
   //NONE, GOT_M, GOT_N, GOT_I, GOT_G, GOT_H, GOT_V, GOT_R, GOT_P
   switch(state){
+    case GOT_D:
+      // return diagnostic info
+      sendStatus();
+      break;
     case GOT_N:
       setNumPoints(current_value);
       break;
@@ -262,6 +261,8 @@ void processIncomingByte (const byte c){
       case 'p':
         state = GOT_P;
         break;
+      case 'd':
+        state = GOT_D;
       default:
         state = NONE;
         break;
